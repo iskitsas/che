@@ -13,6 +13,7 @@ package org.eclipse.che.ide.api.machine;
 import org.eclipse.che.api.core.model.machine.Machine;
 import org.eclipse.che.api.machine.shared.dto.MachineConfigDto;
 import org.eclipse.che.api.promises.client.Promise;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 
 /**
  * Manager for machine.
@@ -32,7 +33,7 @@ public interface MachineManager {
      * @param machineConfig
      *         contains information about dev machine configuration
      */
-    void onDevMachineCreating(MachineConfigDto machineConfig);
+    void onWsStarting(WorkspaceDto workspace);
 
     /**
      * Performs some actions when machine is running.

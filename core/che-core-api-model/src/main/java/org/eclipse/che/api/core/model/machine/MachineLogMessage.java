@@ -8,7 +8,7 @@
  * Contributors:
  *   Codenvy, S.A. - initial API and implementation
  *******************************************************************************/
-package org.eclipse.che.api.machine.server;
+package org.eclipse.che.api.core.model.machine;
 
 /**
  * author Alexander Garagatyi

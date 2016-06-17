@@ -32,6 +32,7 @@ import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode;
 import org.eclipse.che.ide.api.outputconsole.OutputConsole;
 import org.eclipse.che.ide.api.parts.WorkspaceAgent;
+import org.eclipse.che.ide.api.workspace.WorkspaceServiceClient;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.MachineResources;
@@ -126,6 +127,9 @@ public class ConsolesPanelPresenterTest {
     @Mock
     private Promise<MachineDto> machinePromise;
 
+    @Mock
+    private WorkspaceServiceClient workspaceService;
+
     @Captor
     private ArgumentCaptor<AcceptsOneWidget>                   acceptsOneWidgetCaptor;
     @Captor
@@ -155,7 +159,7 @@ public class ConsolesPanelPresenterTest {
         presenter =
                 new ConsolesPanelPresenter(view, eventBus, dtoFactory, dialogFactory, entityFactory, terminalFactory, commandConsoleFactory,
                                            commandTypeRegistry, workspaceAgent, notificationManager, localizationConstant,
-                                           machineService, resources, appContext);
+                                           machineService, resources, appContext, workspaceService);
     }
 
     @Test

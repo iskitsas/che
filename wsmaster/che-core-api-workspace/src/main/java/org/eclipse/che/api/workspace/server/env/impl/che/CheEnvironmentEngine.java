@@ -24,7 +24,7 @@ import org.eclipse.che.api.core.model.machine.MachineStatus;
 import org.eclipse.che.api.core.model.workspace.Environment;
 import org.eclipse.che.api.core.util.LineConsumer;
 import org.eclipse.che.api.core.util.MessageConsumer;
-import org.eclipse.che.api.machine.server.MachineLogMessage;
+import org.eclipse.che.api.core.model.machine.MachineLogMessage;
 import org.eclipse.che.api.machine.server.MachineLogMessageImpl;
 import org.eclipse.che.api.machine.server.MachineManager;
 import org.eclipse.che.api.machine.server.exception.MachineException;

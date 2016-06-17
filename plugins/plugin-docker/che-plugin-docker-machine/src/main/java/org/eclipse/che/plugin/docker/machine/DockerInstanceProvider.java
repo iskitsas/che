@@ -575,6 +575,7 @@ public class DockerInstanceProvider implements InstanceProvider {
             // todo or set something to ports that should be published only - servers + field ports
 
             // todo respect machine links
+            // todo respect volumesFrom, volumes
 
             final HostConfig hostConfig = new HostConfig();
             hostConfig.withBinds(volumes)

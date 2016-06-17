@@ -16,12 +16,10 @@ import com.google.inject.Singleton;
 import com.google.web.bindery.event.shared.EventBus;
 
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
-import org.eclipse.che.api.machine.shared.dto.SnapshotDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.api.promises.client.PromiseError;
-import org.eclipse.che.api.workspace.shared.dto.EnvironmentDto;
 import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
 import org.eclipse.che.api.workspace.shared.dto.event.WorkspaceStatusEvent;
 import org.eclipse.che.ide.CoreLocalizationConstant;
@@ -65,7 +63,6 @@ import static org.eclipse.che.api.core.model.workspace.WorkspaceStatus.RUNNING;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.FLOAT_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.DisplayMode.NOT_EMERGE_MODE;
 import static org.eclipse.che.ide.api.notification.StatusNotification.Status.FAIL;
-import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.MACHINE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.InitialLoadingInfo.Operations.WORKSPACE_BOOTING;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.ERROR;
 import static org.eclipse.che.ide.ui.loaders.initialization.OperationInfo.Status.IN_PROGRESS;
@@ -204,7 +201,9 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                         subscribeToWorkspaceStatusWebSocket(workspace);
 
                         if (!RUNNING.equals(workspace.getStatus())) {
-                            workspaceServiceClient.getSnapshot(workspace.getId()).then(new Operation<List<SnapshotDto>>() {
+                            handleWsStart(workspaceServiceClient.startById(workspace.getId(),
+                                                                           workspace.getConfig().getDefaultEnv()));
+                            /*workspaceServiceClient.getSnapshot(workspace.getId()).then(new Operation<List<SnapshotDto>>() {
                                 @Override
                                 public void apply(List<SnapshotDto> snapshots) throws OperationException {
                                     if (snapshots.isEmpty()) {
@@ -214,7 +213,7 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
                                         showRecoverWorkspaceConfirmDialog(workspace);
                                     }
                                 }
-                            });
+                            });*/
                         } else {
                             initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                             setCurrentWorkspace(workspace);
@@ -272,10 +271,12 @@ public abstract class WorkspaceComponent implements Component, WsAgentStateHandl
             public void apply(WorkspaceDto workspace) throws OperationException {
                 initialLoadingInfo.setOperationStatus(WORKSPACE_BOOTING.getValue(), SUCCESS);
                 setCurrentWorkspace(workspace);
-                EnvironmentDto currentEnvironment = workspace.getConfig().getEnvironments().get(workspace.getConfig().getDefaultEnv());
+//                EnvironmentDto currentEnvironment = workspace.getConfig().getEnvironments().get(workspace.getConfig().getDefaultEnv());
 
+                MachineManager machineManager = machineManagerProvider.get();
+                machineManager.onWsStarting(workspace);
 //                perspectiveManager.setPerspectiveId("Operations Perspective");
-                initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
+//                initialLoadingInfo.setOperationStatus(MACHINE_BOOTING.getValue(), IN_PROGRESS);
             }
         }).catchError(new Operation<PromiseError>() {
             @Override

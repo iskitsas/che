@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.api.machine.server;
 
+import org.eclipse.che.api.core.model.machine.MachineLogMessage;
+
 import java.util.Objects;
 
 /**
