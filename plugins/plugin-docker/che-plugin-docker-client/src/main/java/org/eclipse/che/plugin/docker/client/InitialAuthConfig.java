@@ -67,12 +67,12 @@ public class InitialAuthConfig {
     }
 
     @Inject
-    public InitialAuthConfig(ConfigurationProperties properties) {
-        Map<String, String> authProperties = properties.getProperties(CONFIGURATION_PREFIX_PATTERN);
+    public InitialAuthConfig(ConfigurationProperties configurationProperties) {
+        Map<String, String> authProperties = configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
         Set<String> registryPrefixes = authProperties.entrySet()
                                                      .stream()
-                                                     .map(property -> getRegistryName(property.getKey()))
+                                                     .map(property -> getRegistryPrefix(property.getKey()))
                                                      .collect(Collectors.toSet());
 
         configMap = registryPrefixes.stream()
@@ -84,7 +84,7 @@ public class InitialAuthConfig {
     }
 
     /**
-     * Returns docker model ConfigFile {@link AuthConfig}
+     * Returns docker model config file {@link AuthConfig}
      */
     public AuthConfigs getAuthConfigs() {
         if (authConfigs == null) {
@@ -94,8 +94,8 @@ public class InitialAuthConfig {
         return authConfigs;
     }
 
-    private String getRegistryName(String propertyName) throws IllegalArgumentException {
-        String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.", 8);
+    private String getRegistryPrefix(String propertyName) throws IllegalArgumentException {
+        String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.");
 
         if (parts.length < 2) {
             throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid credential registry format is '%s'",

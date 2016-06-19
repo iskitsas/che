@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
+import org.eclipse.che.api.core.ApiException;
+import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
+import org.eclipse.che.api.core.rest.HttpJsonResponse;
 import org.eclipse.che.commons.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +22,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -34,6 +35,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public class DockerRegistryChecker {
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryChecker.class);
+
+    @Inject
+    private HttpJsonRequestFactory httpJsonRequestFactory;
 
     @Inject
     @Nullable
@@ -55,19 +59,16 @@ public class DockerRegistryChecker {
 
             LOG.info("Probing registry '{}'", registryLink);
 
-            final HttpURLConnection conn = (HttpURLConnection) new URL(registryLink).openConnection();
-            conn.setConnectTimeout(30 * 1000);
             try {
-                final int responseCode = conn.getResponseCode();
+                HttpJsonResponse response = httpJsonRequestFactory.fromUrl(registryLink).setTimeout(30 * 1000).request();
+                final int responseCode = response.getResponseCode();
                 LOG.info("Probe of registry '{}' succeed with HTTP response code '{}'", registryLink, responseCode);
-            } catch (IOException ioEx) {
+            } catch (ApiException | IOException ex) {
                 LOG.warn("Docker registry " + registryLink + " is not available, " +
                          "which means that you won't be able to save snapshots of your workspaces." +
                          "\nHow to configure registry?" +
                          "\n\tLocal registry  -> https://docs.docker.com/registry/" +
                          "\n\tRemote registry -> set up 'docker.registry.auth.*' properties");
-            } finally {
-                conn.disconnect();
             }
         }
     }
