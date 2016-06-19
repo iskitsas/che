@@ -70,17 +70,17 @@ public class InitialAuthConfig {
     public InitialAuthConfig(ConfigurationProperties properties) {
         Map<String, String> authProperties = properties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
-        Set<String> registryNames = authProperties.entrySet()
-                                                  .stream()
-                                                  .map(property -> getRegistryName(property.getKey()))
-                                                  .collect(Collectors.toSet());
+        Set<String> registryPrefixes = authProperties.entrySet()
+                                                     .stream()
+                                                     .map(property -> getRegistryName(property.getKey()))
+                                                     .collect(Collectors.toSet());
 
-        configMap = registryNames.stream()
-                                 .collect(toMap(registry -> authProperties.get(CONFIG_PREFIX + registry + "." + URL),
-                                                registry -> createConfig(authProperties.get(CONFIG_PREFIX + registry + "." + URL),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + USER_NAME),
-                                                                         authProperties.get(CONFIG_PREFIX + registry + "." + PASSWORD),
-                                                                         registry)));
+        configMap = registryPrefixes.stream()
+                                    .collect(toMap(registryPrefix -> authProperties.get(registryPrefix + URL),
+                                                   registryPrefix -> createConfig(authProperties.get(registryPrefix + URL),
+                                                                                  authProperties.get(registryPrefix + USER_NAME),
+                                                                                  authProperties.get(registryPrefix + PASSWORD),
+                                                                                  registryPrefix)));
     }
 
     /**
@@ -95,7 +95,7 @@ public class InitialAuthConfig {
     }
 
     private String getRegistryName(String propertyName) throws IllegalArgumentException {
-        String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.");
+        String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.", 8);
 
         if (parts.length < 2) {
             throw new IllegalArgumentException(format("You missed '.' in property '%s'. Valid credential registry format is '%s'",
@@ -111,20 +111,20 @@ public class InitialAuthConfig {
             LOG.warn("Set unused property: " + propertyName);
         }
 
-        return parts[0];
+        return CONFIG_PREFIX + parts[0] + ".";
     }
 
     @Nullable
-    private AuthConfig createConfig(String serverAddress, String username, String password, String registry)
+    private AuthConfig createConfig(String serverAddress, String username, String password, String registryPrefix)
             throws IllegalArgumentException {
         if (isNullOrEmpty(serverAddress)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + URL);
+            throw new IllegalArgumentException("You missed property " + registryPrefix + URL);
         }
         if (isNullOrEmpty(username)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + USER_NAME);
+            throw new IllegalArgumentException("You missed property " + registryPrefix + USER_NAME);
         }
         if (isNullOrEmpty(password)) {
-            throw new IllegalArgumentException("You missed property " + CONFIG_PREFIX + registry + "." + PASSWORD);
+            throw new IllegalArgumentException("You missed property " + registryPrefix + PASSWORD);
         }
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
     }
