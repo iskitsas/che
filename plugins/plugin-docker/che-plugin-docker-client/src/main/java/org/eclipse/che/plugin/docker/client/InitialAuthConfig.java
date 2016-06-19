@@ -52,6 +52,7 @@ public class InitialAuthConfig {
     private static final String USER_NAME = "username";
     private static final String PASSWORD  = "password";
 
+    private Map<String, String>     authProperties;
     private Map<String, AuthConfig> configMap;
     private AuthConfigs             authConfigs;
 
@@ -68,19 +69,14 @@ public class InitialAuthConfig {
 
     @Inject
     public InitialAuthConfig(ConfigurationProperties configurationProperties) {
-        Map<String, String> authProperties = configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN);
+        authProperties = configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
         Set<String> registryPrefixes = authProperties.entrySet()
                                                      .stream()
                                                      .map(property -> getRegistryPrefix(property.getKey()))
                                                      .collect(Collectors.toSet());
 
-        configMap = registryPrefixes.stream()
-                                    .collect(toMap(registryPrefix -> authProperties.get(registryPrefix + URL),
-                                                   registryPrefix -> createConfig(authProperties.get(registryPrefix + URL),
-                                                                                  authProperties.get(registryPrefix + USER_NAME),
-                                                                                  authProperties.get(registryPrefix + PASSWORD),
-                                                                                  registryPrefix)));
+        configMap = registryPrefixes.stream().collect(toMap(regPrefix -> authProperties.get(regPrefix + URL), this::createConfig));
     }
 
     /**
@@ -115,8 +111,11 @@ public class InitialAuthConfig {
     }
 
     @Nullable
-    private AuthConfig createConfig(String serverAddress, String username, String password, String registryPrefix)
-            throws IllegalArgumentException {
+    private AuthConfig createConfig(String registryPrefix) throws IllegalArgumentException {
+        String serverAddress = authProperties.get(registryPrefix + URL);
+        String username = authProperties.get(registryPrefix + USER_NAME);
+        String password = authProperties.get(registryPrefix + PASSWORD);
+
         if (isNullOrEmpty(serverAddress)) {
             throw new IllegalArgumentException("You missed property " + registryPrefix + URL);
         }
@@ -126,6 +125,7 @@ public class InitialAuthConfig {
         if (isNullOrEmpty(password)) {
             throw new IllegalArgumentException("You missed property " + registryPrefix + PASSWORD);
         }
+
         return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
     }
 
