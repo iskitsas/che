@@ -89,7 +89,7 @@ public class InitialAuthConfig {
         return authConfigs;
     }
 
-    private String getRegistryPrefix(String propertyName) throws IllegalArgumentException {
+    private String getRegistryPrefix(String propertyName) {
         String[] parts = propertyName.replaceFirst(CONFIG_PREFIX, "").split("\\.");
 
         if (parts.length < 2) {
@@ -109,13 +109,13 @@ public class InitialAuthConfig {
         return CONFIG_PREFIX + parts[0] + ".";
     }
 
-    private AuthConfig createConfig(String registryPrefix) throws IllegalArgumentException {
+    private AuthConfig createConfig(String registryPrefix) {
         return newDto(AuthConfig.class).withServeraddress(getProperty(registryPrefix + URL))
                                        .withUsername(getProperty(registryPrefix + USER_NAME))
                                        .withPassword(getProperty(registryPrefix + PASSWORD));
     }
 
-    private String getProperty(String propertyName) throws IllegalArgumentException {
+    private String getProperty(String propertyName) {
         String property = authProperties.get(propertyName);
         if (isNullOrEmpty(property)) {
             throw new IllegalArgumentException("You missed property " + propertyName);
