@@ -51,7 +51,6 @@ public class InitialAuthConfigTest {
     private static final String PASSWORD2_VALUE  = "Truth will out";
 
     private final Map<String, String> properties = new HashMap<>();
-    private InitialAuthConfig initialAuthConfig;
 
     @Mock
     private ConfigurationProperties configurationProperties;
@@ -84,7 +83,7 @@ public class InitialAuthConfigTest {
 
     @Test
     public void configurationShouldBeCreatedValidByConfigurationProperties() throws IllegalArgumentException {
-        initialAuthConfig = new InitialAuthConfig(configurationProperties);
+        InitialAuthConfig initialAuthConfig = new InitialAuthConfig(configurationProperties);
 
         Map<String, AuthConfig> configs = initialAuthConfig.getAuthConfigs().getConfigs();
 

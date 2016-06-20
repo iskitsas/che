@@ -12,7 +12,6 @@ package org.eclipse.che.plugin.docker.client;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.inject.ConfigurationProperties;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfig;
 import org.eclipse.che.plugin.docker.client.dto.AuthConfigs;
@@ -110,23 +109,18 @@ public class InitialAuthConfig {
         return CONFIG_PREFIX + parts[0] + ".";
     }
 
-    @Nullable
     private AuthConfig createConfig(String registryPrefix) throws IllegalArgumentException {
-        String serverAddress = authProperties.get(registryPrefix + URL);
-        String username = authProperties.get(registryPrefix + USER_NAME);
-        String password = authProperties.get(registryPrefix + PASSWORD);
+        return newDto(AuthConfig.class).withServeraddress(getProperty(registryPrefix + URL))
+                                       .withUsername(getProperty(registryPrefix + USER_NAME))
+                                       .withPassword(getProperty(registryPrefix + PASSWORD));
+    }
 
-        if (isNullOrEmpty(serverAddress)) {
-            throw new IllegalArgumentException("You missed property " + registryPrefix + URL);
+    private String getProperty(String propertyName) throws IllegalArgumentException {
+        String property = authProperties.get(propertyName);
+        if (isNullOrEmpty(property)) {
+            throw new IllegalArgumentException("You missed property " + propertyName);
         }
-        if (isNullOrEmpty(username)) {
-            throw new IllegalArgumentException("You missed property " + registryPrefix + USER_NAME);
-        }
-        if (isNullOrEmpty(password)) {
-            throw new IllegalArgumentException("You missed property " + registryPrefix + PASSWORD);
-        }
-
-        return newDto(AuthConfig.class).withServeraddress(serverAddress).withUsername(username).withPassword(password);
+        return property;
     }
 
 }
