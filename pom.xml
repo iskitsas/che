@@ -25,6 +25,8 @@
     <name>Che Parent</name>
     <modules>
         <module>core</module>
+        <module>wsmaster</module>
+        <module>wsagent</module>
         <module>ide</module>
         <module>plugins</module>
         <module>samples</module>
@@ -349,11 +351,6 @@
             <dependency>
                 <groupId>org.eclipse.che.plugin</groupId>
                 <artifactId>che-plugin-docker-client</artifactId>
-                <version>${che.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.che.plugin</groupId>
-                <artifactId>che-plugin-docker-ext-client</artifactId>
                 <version>${che.version}</version>
             </dependency>
             <dependency>
