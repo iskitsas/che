@@ -10,6 +10,8 @@
  *******************************************************************************/
 package org.eclipse.che.plugin.docker.client;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.eclipse.che.api.core.ApiException;
 import org.eclipse.che.api.core.rest.HttpJsonRequestFactory;
 import org.eclipse.che.api.core.rest.HttpJsonResponse;
@@ -24,6 +26,7 @@ import javax.inject.Singleton;
 import java.io.IOException;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.Boolean.TRUE;
 
 /**
  * Checks that docker registry is available.
@@ -36,31 +39,32 @@ public class DockerRegistryChecker {
 
     private static final Logger LOG = LoggerFactory.getLogger(DockerRegistryChecker.class);
 
-    @Inject
-    private HttpJsonRequestFactory httpJsonRequestFactory;
+    private final HttpJsonRequestFactory requestFactory;
+    private final String                 registryUrl;
+    private final Boolean                snapshotUseRegistry;
 
     @Inject
-    @Nullable
-    @Named("machine.docker.registry")
-    private String registryUrl;
-
-    @Inject
-    @Nullable
-    @Named("machine.docker.snapshot_use_registry")
-    private Boolean snapshotUseRegistry;
+    public DockerRegistryChecker(HttpJsonRequestFactory requestFactory,
+                                 @Nullable @Named("machine.docker.registry") String registryUrl,
+                                 @Nullable @Named("machine.docker.snapshot_use_registry") Boolean snapshotUseRegistry) {
+        this.requestFactory = requestFactory;
+        this.registryUrl = registryUrl;
+        this.snapshotUseRegistry = snapshotUseRegistry;
+    }
 
     /**
      * Checks that registry is available and if it is not - logs warning message.
      */
+    @VisibleForTesting
     @PostConstruct
-    private void checkRegistryIsAvailable() throws IOException {
-        if (snapshotUseRegistry != null && snapshotUseRegistry && !isNullOrEmpty(registryUrl)) {
+    void checkRegistryIsAvailable() {
+        if (TRUE.equals(snapshotUseRegistry) && !isNullOrEmpty(registryUrl)) {
             String registryLink = "http://" + registryUrl;
 
             LOG.info("Probing registry '{}'", registryLink);
 
             try {
-                HttpJsonResponse response = httpJsonRequestFactory.fromUrl(registryLink).setTimeout(30 * 1000).request();
+                HttpJsonResponse response = requestFactory.fromUrl(registryLink).setTimeout(30 * 1000).request();
                 final int responseCode = response.getResponseCode();
                 LOG.info("Probe of registry '{}' succeed with HTTP response code '{}'", registryLink, responseCode);
             } catch (ApiException | IOException ex) {

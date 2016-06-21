@@ -72,12 +72,10 @@ public class InitialAuthConfigTest {
 
         when(configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN)).thenReturn(properties);
 
-        authConfig1 = newDto(AuthConfig.class).withServeraddress(URL1_VALUE)
-                                              .withUsername(USER_NAME1_VALUE)
+        authConfig1 = newDto(AuthConfig.class).withUsername(USER_NAME1_VALUE)
                                               .withPassword(PASSWORD1_VALUE);
 
-        authConfig2 = newDto(AuthConfig.class).withServeraddress(URL2_VALUE)
-                                              .withUsername(USER_NAME2_VALUE)
+        authConfig2 = newDto(AuthConfig.class).withUsername(USER_NAME2_VALUE)
                                               .withPassword(PASSWORD2_VALUE);
     }
 

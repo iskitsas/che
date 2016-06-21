@@ -20,13 +20,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toMap;
 import static org.eclipse.che.dto.server.DtoFactory.newDto;
 
 /**
@@ -51,9 +51,7 @@ public class InitialAuthConfig {
     private static final String USER_NAME = "username";
     private static final String PASSWORD  = "password";
 
-    private Map<String, String>     authProperties;
-    private Map<String, AuthConfig> configMap;
-    private AuthConfigs             authConfigs;
+    private AuthConfigs authConfigs;
 
     @VisibleForTesting
     protected static final String CONFIG_PREFIX                      = "docker.registry.auth.";
@@ -68,24 +66,29 @@ public class InitialAuthConfig {
 
     @Inject
     public InitialAuthConfig(ConfigurationProperties configurationProperties) {
-        authProperties = configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN);
+        Map<String, String> authProperties = configurationProperties.getProperties(CONFIGURATION_PREFIX_PATTERN);
 
         Set<String> registryPrefixes = authProperties.entrySet()
                                                      .stream()
                                                      .map(property -> getRegistryPrefix(property.getKey()))
                                                      .collect(Collectors.toSet());
 
-        configMap = registryPrefixes.stream().collect(toMap(regPrefix -> authProperties.get(regPrefix + URL), this::createConfig));
+        Map<String, AuthConfig> configMap = new HashMap<>();
+        for (String regPrefix: registryPrefixes) {
+            String url = getPropertyValue(authProperties, regPrefix + URL);
+            String userName = getPropertyValue(authProperties, regPrefix + USER_NAME);
+            String password = getPropertyValue(authProperties, regPrefix + PASSWORD);
+
+            configMap.put(url, newDto(AuthConfig.class).withUsername(userName).withPassword(password));
+        }
+
+        authConfigs = newDto(AuthConfigs.class).withConfigs(configMap);
     }
 
     /**
      * Returns docker model config file {@link AuthConfig}
      */
     public AuthConfigs getAuthConfigs() {
-        if (authConfigs == null) {
-            authConfigs = newDto(AuthConfigs.class);
-            authConfigs.getConfigs().putAll(configMap);
-        }
         return authConfigs;
     }
 
@@ -109,18 +112,12 @@ public class InitialAuthConfig {
         return CONFIG_PREFIX + parts[0] + ".";
     }
 
-    private AuthConfig createConfig(String registryPrefix) {
-        return newDto(AuthConfig.class).withServeraddress(getProperty(registryPrefix + URL))
-                                       .withUsername(getProperty(registryPrefix + USER_NAME))
-                                       .withPassword(getProperty(registryPrefix + PASSWORD));
-    }
-
-    private String getProperty(String propertyName) {
-        String property = authProperties.get(propertyName);
-        if (isNullOrEmpty(property)) {
+    private String getPropertyValue(Map<String, String> authProperties, String propertyName) {
+        String propertyValue = authProperties.get(propertyName);
+        if (isNullOrEmpty(propertyValue)) {
             throw new IllegalArgumentException("You missed property " + propertyName);
         }
-        return property;
+        return propertyValue;
     }
 
 }
