@@ -28,7 +28,7 @@ import org.eclipse.che.ide.api.notification.NotificationManager;
 import org.eclipse.che.ide.api.notification.StatusNotification;
 import org.eclipse.che.ide.collections.Jso;
 import org.eclipse.che.ide.dto.DtoFactory;
-import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEvent;
+import org.eclipse.che.ide.ext.java.client.event.UpdateDependenciesEvent;
 import org.eclipse.che.plugin.maven.client.comunnication.progressor.background.BackgroundLoaderPresenter;
 import org.eclipse.che.plugin.maven.shared.MavenAttributes;
 import org.eclipse.che.plugin.maven.shared.MessageType;
@@ -134,9 +134,10 @@ public class MavenMessagesHandler {
 
     private void handleStartStop(StartStopNotification dto) {
         if (dto.isStart()) {
+            eventBus.fireEvent(UpdateDependenciesEvent.createUpdateDependenciesStartingEvent());
             dependencyResolver.show();
         } else {
-            eventBus.fireEvent(new DependencyUpdatedEvent());
+            eventBus.fireEvent(UpdateDependenciesEvent.createUpdateDependenciesFinishedEvent());
             dependencyResolver.hide();
         }
     }

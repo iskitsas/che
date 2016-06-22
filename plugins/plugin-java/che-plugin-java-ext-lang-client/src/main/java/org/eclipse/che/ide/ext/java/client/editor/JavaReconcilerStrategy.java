@@ -18,9 +18,9 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
 import org.eclipse.che.ide.api.editor.EditorWithErrors;
 import org.eclipse.che.ide.api.resources.VirtualFile;
 import org.eclipse.che.ide.api.editor.text.Region;
-import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEvent;
-import org.eclipse.che.ide.ext.java.client.event.DependencyUpdatedEventHandler;
+import org.eclipse.che.ide.ext.java.client.event.UpdateDependenciesEvent;
 import org.eclipse.che.ide.ext.java.client.projecttree.JavaSourceFolderUtil;
+import org.eclipse.che.ide.ext.java.shared.dto.HighlightedPosition;
 import org.eclipse.che.ide.ext.java.shared.dto.Problem;
 import org.eclipse.che.ide.ext.java.shared.dto.ReconcileResult;
 import org.eclipse.che.ide.api.editor.annotation.AnnotationModel;
@@ -31,9 +31,10 @@ import org.eclipse.che.ide.api.editor.texteditor.TextEditorPresenter;
 import org.eclipse.che.ide.util.loging.Log;
 
 import javax.validation.constraints.NotNull;
+import java.util.Collections;
 import java.util.List;
 
-public class JavaReconcilerStrategy implements ReconcilingStrategy {
+public class JavaReconcilerStrategy implements ReconcilingStrategy, UpdateDependenciesEvent.DependencyUpdatedEventHandler {
 
 
     private final TextEditorPresenter<?>    editor;
@@ -43,7 +44,7 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
     private       SemanticHighlightRenderer highlighter;
     private       JavaReconcileClient       client;
     private       VirtualFile               file;
-    private boolean first = true;
+    private boolean enabled = true;
 
     @AssistedInject
     public JavaReconcilerStrategy(@Assisted @NotNull final TextEditorPresenter<?> editor,
@@ -58,12 +59,7 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
         this.annotationModel = annotationModel;
         this.highlighter = highlighter;
 
-        handlerRegistration = eventBus.addHandler(DependencyUpdatedEvent.TYPE, new DependencyUpdatedEventHandler() {
-            @Override
-            public void onDependencyUpdated() {
-                parse();
-            }
-        });
+        handlerRegistration = eventBus.addHandler(UpdateDependenciesEvent.TYPE, this);
     }
 
     @Override
@@ -78,9 +74,10 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
     }
 
     public void parse() {
-        if (first) {
+        if (!enabled) {
+            highlighter.reconcile(Collections.EMPTY_LIST);
             codeAssistProcessor.disableCodeAssistant();
-            first = false;
+            return;
         }
 
 
@@ -108,7 +105,7 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
     }
 
     private void doReconcile(final List<Problem> problems) {
-        if (!first) {
+        if (enabled) {
             codeAssistProcessor.enableCodeAssistant();
         }
 
@@ -155,5 +152,17 @@ public class JavaReconcilerStrategy implements ReconcilingStrategy {
         if (handlerRegistration != null) {
             handlerRegistration.removeHandler();
         }
+    }
+
+    @Override
+    public void onUpdateDependenciesStarting() {
+        highlighter.reconcile(Collections.<HighlightedPosition>emptyList());
+        enabled = false;
+    }
+
+    @Override
+    public void onUpdateDependenciesFinished() {
+        enabled = true;
+        parse();
     }
 }
